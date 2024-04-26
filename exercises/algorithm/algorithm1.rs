@@ -2,13 +2,12 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
 use std::vec::*;
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 struct Node<T> {
     val: T,
     next: Option<NonNull<Node<T>>>,
@@ -22,20 +21,20 @@ impl<T> Node<T> {
         }
     }
 }
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 struct LinkedList<T> {
     length: u32,
     start: Option<NonNull<Node<T>>>,
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T:std::cmp::PartialOrd + Clone> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T:std::cmp::PartialOrd + Clone> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -43,7 +42,6 @@ impl<T> LinkedList<T> {
             end: None,
         }
     }
-
     pub fn add(&mut self, obj: T) {
         let mut node = Box::new(Node::new(obj));
         node.next = None;
@@ -72,11 +70,33 @@ impl<T> LinkedList<T> {
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
 		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+		let mut list = LinkedList::<T>::new();
+        let mut head_a = list_a.start;
+        let mut head_b = list_b.start;
+        while head_a.is_some() || head_b.is_some() {
+            match head_a {
+                None => {
+                    list.add(unsafe { (*head_b.unwrap().as_ptr()).val.to_owned() });
+                    head_b = unsafe { (*head_b.unwrap().as_ptr()).next };
+                }
+                Some(node_a) => match head_b {
+                    None => {
+                        list.add(unsafe { (*node_a.as_ptr()).val.to_owned() });
+                        head_a = unsafe { (*node_a.as_ptr()).next };
+                    }
+                    Some(node_b) => {
+                        if unsafe { (*node_a.as_ptr()).val.to_owned() } < unsafe { (*node_b.as_ptr()).val.to_owned() } {
+                            list.add(unsafe { (*node_a.as_ptr()).val.to_owned() });
+                            head_a = unsafe { (*node_a.as_ptr()).next };
+                        } else{
+                            list.add(unsafe { (*node_b.as_ptr()).val.to_owned() });
+                            head_b = unsafe { (*node_b.as_ptr()).next };
+                        }
+                    }
+                }
+            }
         }
+        list
 	}
 }
 
